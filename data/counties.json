@@ -1,0 +1,128 @@
+{
+  "Atlantic": [
+    "Burlington",
+    "Camden",
+    "Cape May",
+    "Cumberland",
+    "Gloucester",
+    "Ocean"
+  ],
+  "Bergen": [
+    "Essex",
+    "Hudson",
+    "Passaic"
+  ],
+  "Burlington": [
+    "Atlantic",
+    "Camden",
+    "Mercer",
+    "Monmouth",
+    "Ocean"
+  ],
+  "Camden": [
+    "Atlantic",
+    "Burlington",
+    "Gloucester"
+  ],
+  "Cape May": [
+    "Atlantic",
+    "Cumberland"
+  ],
+  "Cumberland": [
+    "Atlantic",
+    "Cape May",
+    "Gloucester",
+    "Salem"
+  ],
+  "Essex": [
+    "Bergen",
+    "Hudson",
+    "Morris",
+    "Passaic",
+    "Union"
+  ],
+  "Gloucester": [
+    "Atlantic",
+    "Camden",
+    "Cumberland",
+    "Salem"
+  ],
+  "Hudson": [
+    "Bergen",
+    "Essex",
+    "Union"
+  ],
+  "Hunterdon": [
+    "Mercer",
+    "Morris",
+    "Somerset",
+    "Warren"
+  ],
+  "Mercer": [
+    "Burlington",
+    "Hunterdon",
+    "Middlesex",
+    "Monmouth",
+    "Somerset"
+  ],
+  "Middlesex": [
+    "Mercer",
+    "Monmouth",
+    "Somerset",
+    "Union"
+  ],
+  "Monmouth": [
+    "Burlington",
+    "Mercer",
+    "Middlesex",
+    "Ocean"
+  ],
+  "Morris": [
+    "Essex",
+    "Hunterdon",
+    "Passaic",
+    "Somerset",
+    "Sussex",
+    "Union",
+    "Warren"
+  ],
+  "Ocean": [
+    "Atlantic",
+    "Burlington",
+    "Monmouth"
+  ],
+  "Passaic": [
+    "Bergen",
+    "Essex",
+    "Morris",
+    "Sussex"
+  ],
+  "Salem": [
+    "Cumberland",
+    "Gloucester"
+  ],
+  "Somerset": [
+    "Hunterdon",
+    "Mercer",
+    "Middlesex",
+    "Morris",
+    "Union"
+  ],
+  "Sussex": [
+    "Morris",
+    "Passaic",
+    "Warren"
+  ],
+  "Union": [
+    "Essex",
+    "Hudson",
+    "Middlesex",
+    "Morris",
+    "Somerset"
+  ],
+  "Warren": [
+    "Hunterdon",
+    "Morris",
+    "Sussex"
+  ]
+}

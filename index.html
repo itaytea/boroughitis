@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boroughitis</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <button class="icon-btn" id="howto-btn" aria-label="How to play">?</button>
+    <h1>Boroughitis</h1>
+    <button class="icon-btn" id="stats-btn" aria-label="Stats">&#9783;</button>
+  </header>
+
+  <main>
+    <div class="puzzle-meta">
+      <span id="puzzle-num">#000</span>
+      <span class="dot">·</span>
+      <span id="puzzle-date">today</span>
+    </div>
+
+    <div class="outline-wrap">
+      <div class="outline-box" id="outline-box" aria-label="Mystery municipality outline">
+        <span class="outline-placeholder">loading…</span>
+      </div>
+    </div>
+
+    <div class="grid-headers">
+      <span>Name</span>
+      <span>Type</span>
+      <span>County</span>
+      <span>Pop.</span>
+      <span>Dir.</span>
+    </div>
+
+    <div class="guess-grid" id="guess-grid"></div>
+
+    <form id="guess-form" autocomplete="off">
+      <input
+        type="text"
+        id="guess-input"
+        list="muni-options"
+        placeholder="Type a NJ municipality…"
+        spellcheck="false"
+        autocomplete="off"
+      />
+      <datalist id="muni-options"></datalist>
+      <button type="submit" id="guess-btn">Guess</button>
+    </form>
+
+    <div id="end-state" class="end-state hidden">
+      <p id="end-message"></p>
+      <button id="share-btn" class="primary">Share</button>
+    </div>
+
+    <p class="note" id="note"></p>
+  </main>
+
+  <dialog id="howto-dialog">
+    <h2>How to play</h2>
+    <p>Guess the mystery NJ municipality in 6 tries.</p>
+    <p>You start with its outline. Each guess gives you five hints:</p>
+    <ul>
+      <li><b>Name</b> — <span class="legend g">green</span> if correct, <span class="legend y">yellow</span> if your guess borders the answer.</li>
+      <li><b>Type</b> — <span class="legend g">green</span> if same type (boro / township / city / town / village).</li>
+      <li><b>County</b> — <span class="legend g">green</span> if same county, <span class="legend y">yellow</span> if adjacent county.</li>
+      <li><b>Pop.</b> — arrow points toward the answer's population.</li>
+      <li><b>Dir.</b> — compass arrow points toward the mystery municipality.</li>
+    </ul>
+    <p class="fine">New puzzle daily. Same answer for everyone, worldwide.</p>
+    <form method="dialog"><button>Got it</button></form>
+  </dialog>
+
+  <dialog id="stats-dialog">
+    <h2>Statistics</h2>
+    <div class="stats-row">
+      <div><b id="stat-played">0</b><span>played</span></div>
+      <div><b id="stat-winpct">0%</b><span>win %</span></div>
+      <div><b id="stat-streak">0</b><span>streak</span></div>
+      <div><b id="stat-max">0</b><span>max</span></div>
+    </div>
+    <h3>Guess distribution</h3>
+    <div id="stat-dist" class="dist"></div>
+    <form method="dialog"><button>Close</button></form>
+  </dialog>
+
+  <script src="game.js"></script>
+</body>
+</html>
