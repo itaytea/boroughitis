@@ -34,7 +34,3 @@ A daily Wordle-style game for the 564 municipalities of New Jersey.
 - US Census TIGER/Line shapefiles (municipality boundaries)
 - 2020 Decennial Census (population)
 - NJ Department of Community Affairs (municipality types)
-
-## Why "Boroughitis"?
-
-In the 1890s, NJ went on a borough-creation spree to dodge being annexed by larger cities. The state still has 564 municipalities because of it. The disease never ended.
