@@ -70,7 +70,7 @@ The `.gitignore` excludes the things you don't want public:
 
 What's left in the repo: `index.html`, `styles.css`, `game.js`, `data/`,
 `scripts/build_data.py`, `README.md`, `SETUP.md`, `DEPLOY.md`. All
-shippable. Total deployed size: ~2-3 MB (mostly the 564 SVG outlines).
+shippable. Total deployed size: ~6.6 MB (6,871,407 bytes measured with `du -sb`, excluding `.git` and `scripts/`; about 6.3 MB of that is the 564 SVG outlines in `data/outlines/`).
 
 ## Other hosts
 
