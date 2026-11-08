@@ -1,0 +1,15 @@
+# Downloaded TIGER zips / Census responses
+scripts/_cache/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
