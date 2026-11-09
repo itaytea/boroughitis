@@ -144,8 +144,8 @@ main {
   padding-left: 12px;
   font-weight: 600;
 }
-.cell.green  { background: var(--green);  color: white; }
-.cell.yellow { background: var(--yellow); color: var(--fg); }
+.cell.green  { background: var(--green);  color: white; border: 2px solid var(--fg); }
+.cell.yellow { background: var(--yellow); color: var(--fg); border: 2px dashed var(--fg); }
 .cell.gray   { background: var(--gray);   color: white; }
 
 .cell .dir-arrow {
@@ -232,8 +232,8 @@ dialog button {
   color: white;
   font-size: 0.85em;
 }
-.legend.g { background: var(--green); }
-.legend.y { background: var(--yellow); color: var(--fg); }
+.legend.g { background: var(--green); border: 2px solid var(--fg); }
+.legend.y { background: var(--yellow); color: var(--fg); border: 2px dashed var(--fg); }
 
 .stats-row {
   display: grid;
