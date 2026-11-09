@@ -4,9 +4,9 @@
   --muted: #6b6b6b;
   --line: #d6d6d0;
   --tile: #f1f0ec;
-  --green: #5fa55a;
+  --green: #3b7d36;
   --yellow: #d4b94a;
-  --gray: #9a9a96;
+  --gray: #6b6b6b;
   --accent: #2b2b2b;
   --radius: 6px;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -145,7 +145,7 @@ main {
   font-weight: 600;
 }
 .cell.green  { background: var(--green);  color: white; }
-.cell.yellow { background: var(--yellow); color: white; }
+.cell.yellow { background: var(--yellow); color: var(--fg); }
 .cell.gray   { background: var(--gray);   color: white; }
 
 .cell .dir-arrow {
@@ -233,7 +233,7 @@ dialog button {
   font-size: 0.85em;
 }
 .legend.g { background: var(--green); }
-.legend.y { background: var(--yellow); }
+.legend.y { background: var(--yellow); color: var(--fg); }
 
 .stats-row {
   display: grid;
