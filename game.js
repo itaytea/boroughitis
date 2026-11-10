@@ -261,7 +261,9 @@ async function renderOutline(muni) {
   const box = document.getElementById("outline-box");
   box.innerHTML = '<span class="outline-placeholder">…</span>';
   try {
-    const svg = await fetch(`data/outlines/${muni.id}.svg`).then(r => r.text());
+    const resp = await fetch(`data/outlines/${muni.id}.svg`);
+    if (!resp.ok) throw new Error(`outline fetch failed: ${resp.status}`);
+    const svg = await resp.text();
     box.innerHTML = svg;
   } catch (e) {
     box.innerHTML = '<span class="outline-placeholder">outline missing</span>';
