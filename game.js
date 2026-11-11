@@ -76,6 +76,7 @@ function todaysMuni() {
         if (m) return { muni: m, day };
         console.warn("schedule muni id not found, falling back:", SCHEDULE.munis[day]);
       }
+      console.warn("schedule exhausted at day " + day + "; falling back to hashed order. Run scripts/make_schedule.py.");
       return { muni: MUNIS[hashDay(day) % MUNIS.length], day };
     }
     // before start_date -- fall through to legacy EPOCH-based numbering
