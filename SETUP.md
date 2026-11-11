@@ -86,13 +86,9 @@ python3 -m http.server 8765
 
 Then open: <http://localhost:8765/>
 
-The page currently runs against the **6-muni sample dataset** in `data/`.
-Once you run `scripts/build_data.py`, the full 564-municipality dataset
-overwrites it — no frontend changes needed.
+The page runs against the full dataset committed in `data/` (564
+municipalities and 564 outline SVGs). Re-running `scripts/build_data.py`
+regenerates and overwrites those files; no frontend changes are needed.
 
-## Notes on the sample data
-
-The seeded sample only contains Newark, Jersey City, Hoboken, Belleville,
-Bloomfield, and East Orange. The outline SVGs are placeholder shapes, not
-actual municipal boundaries — they'll be replaced with real ones when
-`build_data.py` runs.
+Note that `data/schedule.json` is hand-maintained and is not touched by the
+builder.
