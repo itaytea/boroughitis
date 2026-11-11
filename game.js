@@ -93,7 +93,13 @@ function loadState() {
   } catch { return {}; }
 }
 function saveState(s) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  // Storage can be unavailable (private mode, blocked site data) or full.
+  // The game keeps working from the in-memory state either way.
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  } catch (err) {
+    console.warn("could not save progress:", err);
+  }
 }
 
 function getOrCreateToday(day) {
