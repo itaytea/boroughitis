@@ -103,7 +103,15 @@ function saveState(s) {
 }
 
 function getOrCreateToday(day) {
-  const s = loadState();
+  let s = loadState();
+  if (!s || typeof s !== "object" || Array.isArray(s)) s = {};
+  // Drop saved guesses whose ids are no longer in the data (e.g. after a
+  // data rebuild), so rendering never sees an unknown municipality.
+  if (Array.isArray(s.guesses)) {
+    s.guesses = s.guesses.filter((id) => MUNI_BY_ID.has(id));
+  } else {
+    s.guesses = [];
+  }
   if (s.currentDay !== day) {
     s.currentDay = day;
     s.guesses = []; // array of muni ids
@@ -213,7 +221,7 @@ function renderGrid(state, answer) {
     const guessId = state.guesses[i];
     if (guessId) {
       const guess = MUNI_BY_ID.get(guessId);
-      grid.appendChild(renderRow(compare(guess, answer)));
+      grid.appendChild(guess ? renderRow(compare(guess, answer)) : renderEmptyRow());
     } else {
       grid.appendChild(renderEmptyRow());
     }
@@ -345,6 +353,7 @@ function shareGrid(state, answer, puzzleNum) {
   const lines = [`Boroughitis #${puzzleNum} ${state.won ? state.guesses.length : "X"}/${MAX_GUESSES}`];
   for (const id of state.guesses) {
     const g = MUNI_BY_ID.get(id);
+    if (!g) continue;
     const c = compare(g, answer);
     const row = [
       colorEmoji(c.name.color),
