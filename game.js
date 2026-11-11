@@ -272,12 +272,30 @@ function renderEmptyRow() {
   return row;
 }
 
+function parseSafeSvg(text) {
+  const doc = new DOMParser().parseFromString(text, "image/svg+xml");
+  const root = doc.documentElement;
+  if (!root || root.localName !== "svg" || doc.querySelector("parsererror")) return null;
+  root.querySelectorAll("script, foreignObject").forEach(el => el.remove());
+  const all = [root, ...root.querySelectorAll("*")];
+  for (const el of all) {
+    for (const attr of Array.from(el.attributes)) {
+      if (/^on/i.test(attr.name)) el.removeAttribute(attr.name);
+    }
+  }
+  return document.importNode(root, true);
+}
+
 async function renderOutline(muni) {
   const box = document.getElementById("outline-box");
   box.innerHTML = '<span class="outline-placeholder">…</span>';
   try {
-    const svg = await fetch(`data/outlines/${muni.id}.svg`).then(r => r.text());
-    box.innerHTML = svg;
+    const resp = await fetch(`data/outlines/${muni.id}.svg`);
+    if (!resp.ok) throw new Error(`outline fetch failed: ${resp.status}`);
+    const svg = await resp.text();
+    const node = parseSafeSvg(svg);
+    if (!node) throw new Error("outline is not valid SVG");
+    box.replaceChildren(node);
   } catch (e) {
     box.innerHTML = '<span class="outline-placeholder">outline missing</span>';
   }
