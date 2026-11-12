@@ -1,12 +1,18 @@
 """Tests for the pure helpers in scripts/build_data.py (no network, no cache)."""
+import os
 import re
 import sys
 from pathlib import Path
 
 import pytest
 
-pytest.importorskip("geopandas")
-pytest.importorskip("shapely")
+# In CI (CI_REQUIRE_DEPS=1) missing build deps must fail, not silently skip.
+if os.environ.get("CI_REQUIRE_DEPS") == "1":
+    import geopandas  # noqa: F401
+    import shapely  # noqa: F401
+else:
+    pytest.importorskip("geopandas")
+    pytest.importorskip("shapely")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
