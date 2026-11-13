@@ -399,6 +399,15 @@ function dirEmoji(deg) {
 function setupShare(state, answer, puzzleNum) {
   document.getElementById("share-btn").addEventListener("click", async () => {
     const text = shareGrid(state, answer, puzzleNum);
+    if (navigator.share) {
+      try {
+        await navigator.share({ text, url: location.href });
+        return;
+      } catch (err) {
+        if (err && err.name === "AbortError") return; // user dismissed the sheet
+        // otherwise fall through to the clipboard
+      }
+    }
     try {
       await navigator.clipboard.writeText(text);
       setNote("Copied to clipboard!");
