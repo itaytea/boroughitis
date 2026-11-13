@@ -199,6 +199,7 @@ button.primary:hover { background: #000; }
   font-family: var(--font-mono);
   margin-top: 16px;
   min-height: 1.2em;
+  white-space: pre-line;
 }
 
 /* dialogs */
