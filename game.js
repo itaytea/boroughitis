@@ -102,13 +102,20 @@ function saveState(s) {
   }
 }
 
-function getOrCreateToday(day) {
+function getOrCreateToday(day, answer) {
   let s = loadState();
   if (!s || typeof s !== "object" || Array.isArray(s)) s = {};
   // Drop saved guesses whose ids are no longer in the data (e.g. after a
   // data rebuild), so rendering never sees an unknown municipality.
   if (Array.isArray(s.guesses)) {
+    const before = s.guesses.length;
     s.guesses = s.guesses.filter((id) => MUNI_BY_ID.has(id));
+    if (s.guesses.length !== before && s.currentDay === day) {
+      // The old won/done flags described the old list; recompute them.
+      s.won = !!answer && s.guesses.includes(answer.id);
+      s.done = s.won || s.guesses.length >= MAX_GUESSES;
+      saveState(s);
+    }
   } else {
     s.guesses = [];
   }
@@ -132,7 +139,8 @@ function recordResult(state, won) {
   stats.played++;
   if (won) {
     stats.wins++;
-    stats.dist[state.guesses.length - 1]++;
+    const slot = state.guesses.length - 1;
+    if (slot >= 0 && slot < stats.dist.length) stats.dist[slot]++;
     if (stats.lastWonDay === state.currentDay - 1 || stats.lastWonDay === null) {
       stats.streak = Math.max(1, stats.streak + 1);
     } else {
@@ -453,7 +461,7 @@ function renderStats(state) {
   }
 
   const { muni: answer, day } = todaysMuni();
-  const state = getOrCreateToday(day);
+  const state = getOrCreateToday(day, answer);
 
   // Header meta
   document.getElementById("puzzle-num").textContent = `#${String(day + 1).padStart(3, "0")}`;
