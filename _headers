@@ -1,0 +1,28 @@
+# Cloudflare Pages custom headers. Rules are cumulative: every matching
+# block applies, so /* carries the security headers and the path blocks
+# below add Cache-Control.
+
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/
+  Cache-Control: no-cache, must-revalidate
+
+/index.html
+  Cache-Control: no-cache, must-revalidate
+
+# Not content-hashed, so keep these short-ish and never immutable.
+/game.js
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/styles.css
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+# schedule.json changes when new puzzles are added.
+/data/*.json
+  Cache-Control: public, max-age=300, stale-while-revalidate=3600
+
+/data/outlines/*.svg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
