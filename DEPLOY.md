@@ -72,6 +72,16 @@ What's left in the repo: `index.html`, `styles.css`, `game.js`, `data/`,
 `scripts/build_data.py`, `README.md`, `SETUP.md`, `DEPLOY.md`. All
 shippable. Total deployed size: ~6.6 MB (6,871,407 bytes measured with `du -sb`, excluding `.git` and `scripts/`; about 6.3 MB of that is the 564 SVG outlines in `data/outlines/`).
 
+## Caching and security headers
+
+`_headers` (repo root) is read by Cloudflare Pages and sets cache rules and
+security headers: `index.html` is always revalidated, `game.js`/`styles.css`
+cache for an hour (they are not content-hashed), `data/*.json` for five
+minutes, and outlines for a week. The CSP allows only same-origin resources;
+`style-src-attr 'unsafe-inline'` is needed because `game.js` writes an inline
+`style` attribute for the stats bars. If you add inline scripts, external
+hosts or fonts, update the CSP in `_headers` too.
+
 ## Other hosts
 
 If you ever want to switch:
