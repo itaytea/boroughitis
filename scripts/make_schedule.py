@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 from pathlib import Path
 
@@ -18,6 +19,8 @@ DATA = Path(__file__).resolve().parent.parent / "data"
 
 
 def build(existing: list[str], ids: list[str], seed: int, cycles: int) -> list[str]:
+    if len(ids) < 2:
+        raise SystemExit("need at least 2 municipality ids")
     known = set(ids)
     unknown = [i for i in existing if i not in known]
     if unknown:
@@ -42,6 +45,9 @@ def build(existing: list[str], ids: list[str], seed: int, cycles: int) -> list[s
         if out and cycle[0] == out[-1]:
             cycle[0], cycle[-1] = cycle[-1], cycle[0]
         out += cycle
+    for day in range(1, len(out)):
+        if out[day] == out[day - 1]:
+            raise SystemExit(f"adjacent repeat on day {day}: {out[day]}")
     return out
 
 
@@ -56,7 +62,9 @@ def main() -> None:
     sched = json.loads(path.read_text())
     ids = [m["id"] for m in json.loads((DATA / "municipalities.json").read_text())]
     sched["munis"] = build(sched["munis"], ids, args.seed, args.cycles)
-    path.write_text(json.dumps(sched, indent=2) + "\n")
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(sched, indent=2) + "\n")
+    os.replace(tmp, path)
     print(f"wrote {len(sched['munis'])} entries from {sched['start_date']}")
 
 
