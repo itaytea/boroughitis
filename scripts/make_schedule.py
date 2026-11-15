@@ -18,22 +18,28 @@ DATA = Path(__file__).resolve().parent.parent / "data"
 
 
 def build(existing: list[str], ids: list[str], seed: int, cycles: int) -> list[str]:
-    unknown = [i for i in existing if i not in set(ids)]
+    known = set(ids)
+    unknown = [i for i in existing if i not in known]
     if unknown:
         raise SystemExit(f"existing schedule has unknown ids: {unknown}")
-    if len(set(existing)) != len(existing):
-        raise SystemExit("existing schedule contains repeats")
+    n = len(ids)
+    for start in range(0, len(existing), n):
+        window = existing[start:start + n]
+        if len(set(window)) != len(window):
+            raise SystemExit(f"existing schedule contains repeats within the cycle at day {start}")
     rng = random.Random(seed)
     out = list(existing)
-    seen = set(existing)
-    rest = sorted(i for i in ids if i not in seen)
-    rng.shuffle(rest)
-    out += rest
+    # finish the last partial cycle with the ids it is still missing
+    if len(out) % n or not out:
+        seen = set(out[len(out) - len(out) % n:])
+        rest = sorted(i for i in ids if i not in seen)
+        rng.shuffle(rest)
+        out += rest
     for _ in range(cycles - 1):
         cycle = sorted(ids)
         rng.shuffle(cycle)
         # avoid a repeat across the cycle boundary
-        if cycle[0] == out[-1]:
+        if out and cycle[0] == out[-1]:
             cycle[0], cycle[-1] = cycle[-1], cycle[0]
         out += cycle
     return out
