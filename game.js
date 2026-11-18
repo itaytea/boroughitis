@@ -214,6 +214,38 @@ function dirCmp(g, a) {
 
 // ------------------------------------------------------------------ render
 
+const COMPASS = ["north","northeast","east","southeast","south","southwest","west","northwest"];
+
+function compassWord(deg) {
+  return COMPASS[Math.round(deg / 45) % 8];
+}
+
+function matchWord(color, yellowText) {
+  return color === "green" ? "match" : color === "yellow" ? yellowText : "no match";
+}
+
+// Plain-text description of one guess row, for screen readers.
+function describeGuess(cmp) {
+  const name = cmp.name.text;
+  const nameRes = cmp.name.color === "green" ? "correct"
+                : cmp.name.color === "yellow" ? "borders the answer" : "not the answer";
+  const pop = cmp.pop.arrow === "↑" ? "the answer is more populous"
+            : cmp.pop.arrow === "↓" ? "answer is less populous" : "population matches";
+  const dir = cmp.direction.arrow === "✓" ? "Direction matches"
+            : `The answer is to the ${compassWord(cmp.direction.deg)}`;
+  return `${name}: ${nameRes}. Type ${cmp.type.text}, ${matchWord(cmp.type.color)}. ` +
+         `County ${cmp.county.text}, ${matchWord(cmp.county.color, "adjacent county")}. ` +
+         `Population ${cmp.pop.text.replace(/\s*[↑↓✓]$/, "")}, ${pop}. ${dir}.`;
+}
+
+function announce(text) {
+  const el = document.getElementById("sr-status");
+  if (!el) return;
+  el.textContent = "";
+  // Re-set on the next tick so identical consecutive messages are re-announced.
+  setTimeout(() => { el.textContent = text; }, 50);
+}
+
 function renderGrid(state, answer) {
   const grid = document.getElementById("guess-grid");
   grid.innerHTML = "";
@@ -231,6 +263,8 @@ function renderGrid(state, answer) {
 function renderRow(cmp) {
   const row = document.createElement("div");
   row.className = "row";
+  row.setAttribute("role", "listitem");
+  row.setAttribute("aria-label", describeGuess(cmp));
 
   row.appendChild(cell("name " + cmp.name.color, cmp.name.text));
   row.appendChild(cell(cmp.type.color, cmp.type.text));
@@ -245,6 +279,7 @@ function renderRow(cmp) {
     const a = document.createElement("span");
     a.className = "dir-arrow";
     a.textContent = "↑";
+    a.setAttribute("aria-hidden", "true");
     a.style.transform = `rotate(${cmp.direction.deg}deg)`;
     dirCell.appendChild(a);
   }
@@ -263,6 +298,8 @@ function cell(cls, text) {
 function renderEmptyRow() {
   const row = document.createElement("div");
   row.className = "row empty";
+  row.setAttribute("role", "listitem");
+  row.setAttribute("aria-label", "Empty guess slot");
   for (let i = 0; i < 5; i++) {
     const c = document.createElement("div");
     c.className = "cell";
@@ -361,6 +398,14 @@ function setupForm(state, answer) {
       saveState(state);
     }
     renderGrid(state, answer);
+    let msg = `Guess ${state.guesses.length} of ${MAX_GUESSES}. ` +
+      describeGuess(compare(muni, answer));
+    if (state.done) {
+      msg += state.won
+        ? ` You won in ${state.guesses.length} ${state.guesses.length === 1 ? "guess" : "guesses"}. It was ${answer.name}, ${answer.county}.`
+        : ` Game over. The answer was ${answer.name}, ${answer.county}.`;
+    }
+    announce(msg);
     if (state.done) showEndState(state, answer);
   });
 }
