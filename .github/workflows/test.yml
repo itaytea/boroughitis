@@ -17,8 +17,15 @@ jobs:
           cache-dependency-path: scripts/requirements.txt
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt pytest
-      - name: Run pytest
-        run: python -m pytest -q tests
+      - name: Run pytest (skips are failures)
+        env:
+          CI_REQUIRE_DEPS: "1"
+        run: |
+          set -o pipefail
+          python -m pytest -q -rs tests | tee pytest.log
+          if grep -Eq '[0-9]+ skipped' pytest.log; then
+            echo "::error::tests were skipped"; exit 1
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
