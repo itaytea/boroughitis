@@ -13,10 +13,41 @@ let MUNI_BY_DISPLAY = new Map(); // display string -> record
 let COUNTY_ADJ = {};             // county name -> [adjacent county names]
 let SCHEDULE = null;             // { start_date, munis: [id...] } or null
 
+class DataLoadError extends Error {}
+
+async function fetchJsonOnce(url, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    if (!r.ok) throw new DataLoadError(`${url}: HTTP ${r.status}`);
+    return await r.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Fetch JSON with a timeout; retry once after a short backoff.
+async function fetchJson(url, { timeoutMs = 8000 } = {}) {
+  try {
+    return await fetchJsonOnce(url, timeoutMs);
+  } catch (e) {
+    await new Promise(res => setTimeout(res, 500));
+    try {
+      return await fetchJsonOnce(url, timeoutMs);
+    } catch (e2) {
+      if (e2 instanceof DataLoadError) throw e2;
+      if (e2.name === "AbortError") throw new DataLoadError(`${url}: timed out`);
+      if (e2 instanceof TypeError) throw new DataLoadError(`${url}: ${e2.message}`);
+      throw e2; // e.g. malformed JSON
+    }
+  }
+}
+
 async function loadData() {
   const [m, c, s] = await Promise.all([
-    fetch("data/municipalities.json").then(r => r.json()),
-    fetch("data/counties.json").then(r => r.json()),
+    fetchJson("data/municipalities.json"),
+    fetchJson("data/counties.json"),
     fetch("data/schedule.json").then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
   MUNIS = m;
@@ -501,12 +532,23 @@ function renderStats(state) {
 
 // ------------------------------------------------------------------- init
 
-(async function init() {
+async function init() {
+  setNote("");
   try {
     await loadData();
   } catch (e) {
-    setNote("Data not loaded. Run scripts/build_data.py first.");
     console.error(e);
+    if (e instanceof DataLoadError) {
+      const note = document.getElementById("note");
+      note.textContent = "Couldn't load the puzzle data (network or server problem). ";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "Retry";
+      btn.addEventListener("click", () => init());
+      note.appendChild(btn);
+    } else {
+      setNote("Data not loaded. Run scripts/build_data.py first.");
+    }
     return;
   }
   if (MUNIS.length === 0) {
@@ -536,4 +578,6 @@ function renderStats(state) {
   if (!state.stats || state.stats.played === 0) {
     if (state.guesses.length === 0) openDialog("howto-dialog");
   }
-})();
+}
+
+init();
