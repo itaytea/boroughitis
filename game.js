@@ -13,10 +13,39 @@ let MUNI_BY_DISPLAY = new Map(); // display string -> record
 let COUNTY_ADJ = {};             // county name -> [adjacent county names]
 let SCHEDULE = null;             // { start_date, munis: [id...] } or null
 
+class DataLoadError extends Error {}
+
+async function fetchJsonOnce(url, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    if (!r.ok) throw new DataLoadError(`${url}: HTTP ${r.status}`);
+    return await r.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Fetch JSON with a timeout; retry once after a short backoff.
+async function fetchJson(url, { timeoutMs = 8000 } = {}) {
+  try {
+    return await fetchJsonOnce(url, timeoutMs);
+  } catch (e) {
+    await new Promise(res => setTimeout(res, 500));
+    try {
+      return await fetchJsonOnce(url, timeoutMs);
+    } catch (e2) {
+      if (e2 instanceof DataLoadError) throw e2;
+      throw new DataLoadError(`${url}: ${e2.name === "AbortError" ? "timed out" : e2.message}`);
+    }
+  }
+}
+
 async function loadData() {
   const [m, c, s] = await Promise.all([
-    fetch("data/municipalities.json").then(r => r.json()),
-    fetch("data/counties.json").then(r => r.json()),
+    fetchJson("data/municipalities.json"),
+    fetchJson("data/counties.json"),
     fetch("data/schedule.json").then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
   MUNIS = m;
