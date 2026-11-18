@@ -37,7 +37,9 @@ async function fetchJson(url, { timeoutMs = 8000 } = {}) {
       return await fetchJsonOnce(url, timeoutMs);
     } catch (e2) {
       if (e2 instanceof DataLoadError) throw e2;
-      throw new DataLoadError(`${url}: ${e2.name === "AbortError" ? "timed out" : e2.message}`);
+      if (e2.name === "AbortError") throw new DataLoadError(`${url}: timed out`);
+      if (e2 instanceof TypeError) throw new DataLoadError(`${url}: ${e2.message}`);
+      throw e2; // e.g. malformed JSON
     }
   }
 }
@@ -468,12 +470,23 @@ function renderStats(state) {
 
 // ------------------------------------------------------------------- init
 
-(async function init() {
+async function init() {
+  setNote("");
   try {
     await loadData();
   } catch (e) {
-    setNote("Data not loaded. Run scripts/build_data.py first.");
     console.error(e);
+    if (e instanceof DataLoadError) {
+      const note = document.getElementById("note");
+      note.textContent = "Couldn't load the puzzle data (network or server problem). ";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "Retry";
+      btn.addEventListener("click", () => init());
+      note.appendChild(btn);
+    } else {
+      setNote("Data not loaded. Run scripts/build_data.py first.");
+    }
     return;
   }
   if (MUNIS.length === 0) {
@@ -503,4 +516,6 @@ function renderStats(state) {
   if (!state.stats || state.stats.played === 0) {
     if (state.guesses.length === 0) openDialog("howto-dialog");
   }
-})();
+}
+
+init();
