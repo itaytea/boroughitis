@@ -60,3 +60,16 @@ def test_guess_survives_reload(page: Page, site_url: str):
     expect(rows.first).to_contain_text("Newark")
 
     assert errors == [], f"console errors: {errors}"
+
+
+def test_schedule_server_error_shows_retry(page: Page, site_url: str):
+    page.route("**/data/schedule.json", lambda route: route.fulfill(status=500, body="boom"))
+    page.goto(site_url)
+    expect(page.get_by_role("button", name="Retry")).to_be_visible(timeout=15000)
+
+
+def test_schedule_404_still_renders_game(page: Page, site_url: str):
+    page.route("**/data/schedule.json", lambda route: route.fulfill(status=404, body="nope"))
+    page.goto(site_url)
+    expect(page.locator("#guess-grid .row")).to_have_count(6)
+    expect(page.get_by_role("button", name="Retry")).to_have_count(0)
