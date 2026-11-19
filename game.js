@@ -13,14 +13,19 @@ let MUNI_BY_DISPLAY = new Map(); // display string -> record
 let COUNTY_ADJ = {};             // county name -> [adjacent county names]
 let SCHEDULE = null;             // { start_date, munis: [id...] } or null
 
-class DataLoadError extends Error {}
+class DataLoadError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
 
 async function fetchJsonOnce(url, timeoutMs) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const r = await fetch(url, { signal: ctrl.signal });
-    if (!r.ok) throw new DataLoadError(`${url}: HTTP ${r.status}`);
+    if (!r.ok) throw new DataLoadError(`${url}: HTTP ${r.status}`, r.status);
     return await r.json();
   } finally {
     clearTimeout(timer);
@@ -32,6 +37,7 @@ async function fetchJson(url, { timeoutMs = 8000 } = {}) {
   try {
     return await fetchJsonOnce(url, timeoutMs);
   } catch (e) {
+    if (e instanceof DataLoadError && e.status === 404) throw e;
     await new Promise(res => setTimeout(res, 500));
     try {
       return await fetchJsonOnce(url, timeoutMs);
@@ -44,11 +50,22 @@ async function fetchJson(url, { timeoutMs = 8000 } = {}) {
   }
 }
 
+// Like fetchJson, but a 404 means the file is intentionally absent (null).
+// Any other failure is rethrown so the retry UI can handle it.
+async function fetchOptionalJson(url) {
+  try {
+    return await fetchJson(url);
+  } catch (e) {
+    if (e instanceof DataLoadError && e.status === 404) return null;
+    throw e;
+  }
+}
+
 async function loadData() {
   const [m, c, s] = await Promise.all([
     fetchJson("data/municipalities.json"),
     fetchJson("data/counties.json"),
-    fetch("data/schedule.json").then(r => r.ok ? r.json() : null).catch(() => null),
+    fetchOptionalJson("data/schedule.json"),
   ]);
   MUNIS = m;
   COUNTY_ADJ = c;
