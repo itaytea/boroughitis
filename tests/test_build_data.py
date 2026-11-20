@@ -133,3 +133,42 @@ def test_county_names_cover_21_counties():
     assert len(bd.NJ_COUNTY_NAMES) == 21
     assert all(re.fullmatch(r"\d{3}", k) for k in bd.NJ_COUNTY_NAMES)
     assert len(set(bd.NJ_COUNTY_NAMES.values())) == 21
+
+
+# --- compute_borders -------------------------------------------------------
+
+def _grid(n=3):
+    """n x n unit squares scaled to 100 ft; returns (geoms, idx_to_slug)."""
+    from shapely.geometry import box
+    geoms = [box(c * 100, r * 100, (c + 1) * 100, (r + 1) * 100)
+             for r in range(n) for c in range(n)]
+    return geoms, {k: f"s{k}" for k in range(len(geoms))}
+
+
+def test_compute_borders_edges_not_corners():
+    geoms, slugs = _grid(3)
+    b = bd.compute_borders(geoms, slugs)
+    # Center square (4) touches the four edge-sharing squares only.
+    assert sorted(b[4]) == ["s1", "s3", "s5", "s7"]
+    # Corner square (0) touches 1 and 3, not diagonal 4.
+    assert sorted(b[0]) == ["s1", "s3"]
+    assert "s4" not in b[0]
+
+
+def test_compute_borders_symmetric():
+    geoms, slugs = _grid(3)
+    b = bd.compute_borders(geoms, slugs)
+    rev = {v: k for k, v in slugs.items()}
+    for i, names in b.items():
+        for n in names:
+            assert slugs[i] in b[rev[n]]
+    # No duplicates from mirroring.
+    assert all(len(v) == len(set(v)) for v in b.values())
+
+
+def test_compute_borders_min_shared_threshold():
+    from shapely.geometry import box
+    geoms = [box(0, 0, 10, 10), box(10, 0, 20, 10)]
+    slugs = {0: "a", 1: "b"}
+    assert bd.compute_borders(geoms, slugs)[0] == ["b"]
+    assert 0 not in bd.compute_borders(geoms, slugs, min_shared=10)
