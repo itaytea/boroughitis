@@ -175,7 +175,8 @@ def compute_borders(geoms, idx_to_slug: Dict[int, str],
     Two geometries are neighbors if their boundaries share a line longer than
     `min_shared` (CRS units). 'touches' is too strict because tiny float gaps
     in TIGER polygons sometimes break it, so we measure the shared boundary
-    length instead. Boundaries are computed once per geometry.
+    length instead. Boundaries are computed once per geometry and each
+    pair is checked once, with the hit mirrored into both lists.
     """
     geoms = list(geoms)
     boundaries = [g.boundary for g in geoms]
@@ -185,11 +186,12 @@ def compute_borders(geoms, idx_to_slug: Dict[int, str],
         # Candidates whose bbox intersects ours.
         for j in sindex.intersection(geom.bounds):
             j = int(j)
-            if j == i:
-                continue
+            if j <= i:
+                continue  # each pair is visited once, from its lower index
             inter = boundaries[i].intersection(boundaries[j])
             if not inter.is_empty and inter.length > min_shared:
                 borders_by_idx[i].append(idx_to_slug[j])
+                borders_by_idx[j].append(idx_to_slug[i])
     return borders_by_idx
 
 
