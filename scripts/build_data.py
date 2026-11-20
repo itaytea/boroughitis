@@ -165,6 +165,36 @@ def write_svg(path: Path, d: str) -> None:
 
 # --- main pipeline --------------------------------------------------------
 
+MIN_SHARED_BORDER_FT = 0.5  # > 0.5 ft shared edge counts as adjacent
+
+
+def compute_borders(geoms, idx_to_slug: Dict[int, str],
+                    min_shared: float = MIN_SHARED_BORDER_FT) -> Dict[int, List[str]]:
+    """Map each geometry position to the slugs of the geometries it borders.
+
+    Two geometries are neighbors if their boundaries share a line longer than
+    `min_shared` (CRS units). 'touches' is too strict because tiny float gaps
+    in TIGER polygons sometimes break it, so we measure the shared boundary
+    length instead. Boundaries are computed once per geometry and each
+    pair is checked once, with the hit mirrored into both lists.
+    """
+    geoms = list(geoms)
+    boundaries = [g.boundary for g in geoms]
+    sindex = gpd.GeoSeries(geoms).sindex
+    borders_by_idx: Dict[int, List[str]] = defaultdict(list)
+    for i, geom in enumerate(geoms):
+        # Candidates whose bbox intersects ours.
+        for j in sindex.intersection(geom.bounds):
+            j = int(j)
+            if j <= i:
+                continue  # each pair is visited once, from its lower index
+            inter = boundaries[i].intersection(boundaries[j])
+            if not inter.is_empty and inter.length > min_shared:
+                borders_by_idx[i].append(idx_to_slug[j])
+                borders_by_idx[j].append(idx_to_slug[i])
+    return borders_by_idx
+
+
 def build():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     OUTLINES_DIR.mkdir(parents=True, exist_ok=True)
@@ -236,22 +266,7 @@ def build():
     centroids_wgs = gpd.GeoSeries([r["_geom"].centroid for r in records],
                                   crs=NJ_CRS).to_crs("EPSG:4326")
 
-    sindex = munis.sindex
-    borders_by_idx: Dict[int, List[str]] = defaultdict(list)
-    for i, row in munis.iterrows():
-        # Candidates whose bbox intersects ours.
-        cand = list(sindex.intersection(row.geometry.bounds))
-        for j in cand:
-            if j == i:
-                continue
-            # 'touches' = shared boundary, no interior overlap. Strict adjacency.
-            # Use intersects + shape filter as fallback because tiny float gaps
-            # in TIGER polygons sometimes break .touches(). Practical heuristic:
-            # share a boundary of nonzero length.
-            other = munis.iloc[j].geometry
-            inter = row.geometry.boundary.intersection(other.boundary)
-            if not inter.is_empty and inter.length > 0.5:  # > 0.5 ft shared edge
-                borders_by_idx[i].append(idx_to_slug[j])
+    borders_by_idx = compute_borders(munis.geometry, idx_to_slug)
 
     print(f"      avg neighbors per muni: "
           f"{sum(len(v) for v in borders_by_idx.values()) / len(records):.1f}")
