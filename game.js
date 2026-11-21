@@ -541,7 +541,14 @@ function renderStats(state) {
   s.dist.forEach((count, i) => {
     const row = document.createElement("div");
     row.className = "bar";
-    row.innerHTML = `<span class="label">${i + 1}</span><div class="fill" style="width:${(count / max) * 100}%">${count}</div>`;
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = String(i + 1);
+    const fill = document.createElement("div");
+    fill.className = "fill";
+    fill.style.width = (count / max) * 100 + "%";
+    fill.textContent = String(count);
+    row.append(label, fill);
     dist.appendChild(row);
   });
 }
