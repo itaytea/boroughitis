@@ -348,17 +348,35 @@ function renderEmptyRow() {
   return row;
 }
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+const SVG_ALLOWED_ELEMENTS = new Set(["svg", "g", "path", "title"]);
+const SVG_ALLOWED_ATTRS = new Set([
+  "viewBox", "d", "fill", "stroke", "stroke-width", "transform", "class",
+  "xmlns", "width", "height", "preserveAspectRatio", "fill-rule",
+  // Present in the generated outlines; purely presentational.
+  "stroke-linejoin", "stroke-linecap",
+]);
+
+function sanitizeSvgNode(el) {
+  for (const child of Array.from(el.children)) {
+    if (child.namespaceURI !== SVG_NS || !SVG_ALLOWED_ELEMENTS.has(child.localName)) {
+      child.remove(); // drops the whole subtree
+    } else {
+      sanitizeSvgNode(child);
+    }
+  }
+  for (const attr of Array.from(el.attributes)) {
+    if (!SVG_ALLOWED_ATTRS.has(attr.name)) {
+      el.removeAttributeNode(attr);
+    }
+  }
+}
+
 function parseSafeSvg(text) {
   const doc = new DOMParser().parseFromString(text, "image/svg+xml");
   const root = doc.documentElement;
   if (!root || root.localName !== "svg" || doc.querySelector("parsererror")) return null;
-  root.querySelectorAll("script, foreignObject").forEach(el => el.remove());
-  const all = [root, ...root.querySelectorAll("*")];
-  for (const el of all) {
-    for (const attr of Array.from(el.attributes)) {
-      if (/^on/i.test(attr.name)) el.removeAttribute(attr.name);
-    }
-  }
+  sanitizeSvgNode(root);
   return document.importNode(root, true);
 }
 

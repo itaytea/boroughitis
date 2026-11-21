@@ -60,3 +60,35 @@ def test_guess_survives_reload(page: Page, site_url: str):
     expect(rows.first).to_contain_text("Newark")
 
     assert errors == [], f"console errors: {errors}"
+
+
+UNSAFE_SVG = """<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  viewBox="0 0 10 10" onload="window.__pwned = 1" style="background:url(x)">
+  <image href="http://example.invalid/x.png"/>
+  <use xlink:href="#p"/>
+  <a href="javascript:window.__pwned=1"><path class="inlink" d="M0 0L1 1"/></a>
+  <g onclick="window.__pwned = 1"><path class="real" d="M1 1L9 1L9 9Z" fill="red"
+     style="fill:blue" onmouseover="window.__pwned = 1"/></g>
+</svg>"""
+
+
+def test_outline_svg_is_sanitized(page: Page, site_url: str):
+    page.route(
+        "**/data/outlines/*.svg",
+        lambda route: route.fulfill(status=200, content_type="image/svg+xml", body=UNSAFE_SVG),
+    )
+    page.goto(site_url)
+    box = page.locator("#outline-box")
+    expect(box.locator("svg path.real")).to_have_count(1)
+
+    for tag in ("image", "use", "a", "foreignObject", "script"):
+        expect(box.locator(tag)).to_have_count(0)
+
+    leftover = box.evaluate(
+        """el => [el, ...el.querySelectorAll('*')].flatMap(n =>
+            Array.from(n.attributes).map(a => n.localName + '@' + a.name))"""
+    )
+    assert not [a for a in leftover if a.split("@")[1] in ("style", "href", "xlink:href")
+                or a.split("@")[1].startswith("on")], leftover
+    assert "svg@viewBox" in leftover and "path@d" in leftover and "path@fill" in leftover
+    assert page.evaluate("window.__pwned") is None
