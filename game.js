@@ -160,13 +160,29 @@ function getOrCreateToday(day, answer) {
   return s;
 }
 
+function toCount(v) {
+  const n = Math.floor(Number(v));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+// Coerce stored stats (which may be hand-edited or from an old version) into
+// the shape the rest of the code expects.
+function normalizeStats(s) {
+  if (!s || typeof s !== "object" || Array.isArray(s)) s = {};
+  const dist = Array.isArray(s.dist) ? s.dist : [];
+  return {
+    played: toCount(s.played),
+    wins: toCount(s.wins),
+    streak: toCount(s.streak),
+    maxStreak: toCount(s.maxStreak),
+    dist: [0, 1, 2, 3, 4, 5].map((i) => toCount(dist[i])),
+    lastWonDay: Number.isFinite(s.lastWonDay) ? s.lastWonDay : null,
+  };
+}
+
 function recordResult(state, won) {
   // Update lifetime stats. Distribution[i-1] = wins on guess i.
-  const stats = state.stats || {
-    played: 0, wins: 0, streak: 0, maxStreak: 0,
-    dist: [0, 0, 0, 0, 0, 0],
-    lastWonDay: null,
-  };
+  const stats = normalizeStats(state.stats);
   stats.played++;
   if (won) {
     stats.wins++;
@@ -514,7 +530,7 @@ function setupDialogs(state) {
 }
 
 function renderStats(state) {
-  const s = state.stats || { played: 0, wins: 0, streak: 0, maxStreak: 0, dist: [0,0,0,0,0,0] };
+  const s = normalizeStats(state.stats);
   document.getElementById("stat-played").textContent = s.played;
   document.getElementById("stat-winpct").textContent = s.played ? Math.round(100 * s.wins / s.played) + "%" : "0%";
   document.getElementById("stat-streak").textContent = s.streak;
