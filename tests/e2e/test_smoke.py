@@ -60,3 +60,26 @@ def test_guess_survives_reload(page: Page, site_url: str):
     expect(rows.first).to_contain_text("Newark")
 
     assert errors == [], f"console errors: {errors}"
+
+
+def test_stats_dialog_with_malformed_stored_stats(page: Page, site_url: str):
+    errors = []
+    page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
+    page.on("pageerror", lambda e: errors.append(str(e)))
+
+    page.goto(site_url)
+    page.evaluate(
+        """() => localStorage.setItem("boroughitis.v1", JSON.stringify({
+            stats: {played: -1, wins: "abc", streak: null, maxStreak: {}, dist: "x"}
+        }))"""
+    )
+    page.reload()
+    expect(page.locator("#guess-grid .row")).to_have_count(6)
+    page.keyboard.press("Escape")  # first-visit how-to dialog, if shown
+
+    page.click("#stats-btn")
+    expect(page.locator("#stats-dialog")).to_have_attribute("open", "")
+    expect(page.locator("#stat-played")).to_have_text("0")
+    expect(page.locator("#stat-dist .bar")).to_have_count(6)
+
+    assert errors == [], f"console errors: {errors}"
