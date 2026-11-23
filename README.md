@@ -29,6 +29,7 @@ styles.css
   outlines/              # one SVG per municipality
 /scripts
   build_data.py          # one-time data builder
+  make_schedule.py       # builds data/schedule.json (seeded, no repeats)
   requirements.txt
 ```
 
@@ -49,6 +50,61 @@ client computes the current UTC day number and picks the answer from
 that range. Past the end of the schedule, or with no schedule, it falls back
 to a hash of the day number modulo the muni count. Guesses and stats are kept
 in the browser's localStorage.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Build["Offline (run by hand)"]
+    TIGER["Census TIGER/Line + 2020 Census"] --> BD["scripts/build_data.py"]
+    BD --> M["data/municipalities.json"]
+    BD --> C["data/counties.json"]
+    BD --> O["data/outlines/*.svg"]
+    M --> MS["scripts/make_schedule.py"]
+    MS --> S["data/schedule.json"]
+  end
+  subgraph Client["Browser"]
+    H["index.html + styles.css"] --> G["game.js"]
+    G -->|fetch| M
+    G -->|fetch| C
+    G -->|fetch| S
+    G -->|fetch| O
+    G --> L[("localStorage: guesses and stats")]
+  end
+  Repo["git push to main"] --> CF["Cloudflare Pages (static, no build)"]
+  CF --> H
+```
+
+There is no backend and no build step: the data files are committed, and
+Cloudflare Pages serves the repo root as-is (see `DEPLOY.md`; caching and
+security headers are in `_headers`).
+
+## Puzzle schedule
+
+`data/schedule.json` starts on 2026-05-18 and lists each of the 564
+municipalities once, so the explicit schedule runs through **2027-12-02**
+(its last day). After that the game falls back to the hash-based pick
+described above, so `make_schedule.py` should be re-run to extend it before
+then.
+
+## Accessibility
+
+What the game does today (it has not been audited against WCAG):
+
+- Guess rows carry a full plain-text `aria-label` (name result, type, county,
+  population direction, compass direction) built by `describeGuess` in
+  `game.js`, so screen readers get more than the colors.
+- Each guess is announced through a polite `aria-live` status region, along
+  with the win or loss message.
+- The guess input has a visually hidden `<label>`, is described by the status
+  note, and offers municipality suggestions through a native `<datalist>`.
+- The help and stats panels are native `<dialog>` elements with labelled
+  titles; the header buttons have `aria-label`s.
+- The outline is exposed as `role="img"` with a text label, and decorative
+  arrows are `aria-hidden`.
+- Results are not color-only: cells show text, population arrows, and a
+  compass arrow or check mark.
+- The page sets `lang="en"` and the guess input has a visible focus outline.
 
 ## Data sources
 
