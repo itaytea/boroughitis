@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import urllib.request
 import zipfile
 from collections import defaultdict
@@ -42,7 +43,6 @@ COUNTY_URL = (
     f"https://www2.census.gov/geo/tiger/TIGER{TIGER_YEAR}/COUNTY/"
     f"tl_{TIGER_YEAR}_us_county.zip"
 )
-import os  # noqa: E402
 _CENSUS_KEY = os.environ.get("CENSUS_API_KEY", "").strip()
 POP_URL = (
     "https://api.census.gov/data/2020/dec/pl"
