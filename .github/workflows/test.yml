@@ -20,6 +20,10 @@ jobs:
           cache-dependency-path: scripts/requirements.txt
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt pytest
+      - name: Lint (ruff)
+        run: |
+          pip install ruff
+          ruff check scripts tests
       - name: Run pytest (skips are failures)
         env:
           CI_REQUIRE_DEPS: "1"
