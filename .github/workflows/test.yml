@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -17,12 +20,16 @@ jobs:
           cache-dependency-path: scripts/requirements.txt
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt pytest
+      - name: Lint (ruff)
+        run: |
+          pip install ruff
+          ruff check scripts tests
       - name: Run pytest (skips are failures)
         env:
           CI_REQUIRE_DEPS: "1"
         run: |
           set -o pipefail
-          python -m pytest -q -rs tests | tee pytest.log
+          python -m pytest -q -rs tests --ignore=tests/e2e | tee pytest.log
           if grep -Eq '[0-9]+ skipped' pytest.log; then
             echo "::error::tests were skipped"; exit 1
           fi

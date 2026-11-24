@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import io
 import json
-import math
+import os
 import urllib.request
 import zipfile
 from collections import defaultdict
@@ -25,8 +25,7 @@ from typing import Dict, List
 
 import geopandas as gpd
 import pandas as pd
-from shapely.geometry import MultiPolygon, Polygon
-from shapely.ops import unary_union
+from shapely.geometry import MultiPolygon
 
 # --- config ---------------------------------------------------------------
 
@@ -44,7 +43,6 @@ COUNTY_URL = (
     f"https://www2.census.gov/geo/tiger/TIGER{TIGER_YEAR}/COUNTY/"
     f"tl_{TIGER_YEAR}_us_county.zip"
 )
-import os
 _CENSUS_KEY = os.environ.get("CENSUS_API_KEY", "").strip()
 POP_URL = (
     "https://api.census.gov/data/2020/dec/pl"
